@@ -1,7 +1,7 @@
 #define INPUT_PIN A0
 #define SWITCH_PIN 2
 
-#define TIMER 1 
+#define TIMER 0 
 
 #define READINGS_CAP 1536
 u8 readings[READINGS_CAP] = {0};
