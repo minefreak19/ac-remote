@@ -3,3 +3,6 @@ parsed.txt
 parsed_rev.txt
 data/
 tmp/
+
+# connection settings
+*.stc

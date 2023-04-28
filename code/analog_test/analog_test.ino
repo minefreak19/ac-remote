@@ -12,7 +12,7 @@ u16 readings_count = 0;
 #define IS_ZERO(x) (x < 5)
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(230400);
 
   pinMode(INPUT_PIN, INPUT);
   pinMode(SWITCH_PIN, INPUT);
