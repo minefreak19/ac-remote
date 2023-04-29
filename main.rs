@@ -14,33 +14,41 @@ use std::{
 const RAW_DATA_MAX: f64 = 256.0;
 const BIAS: f64 = 0.7;
 
-struct FileData {
-    data: Vec<Vec<Value>>,
-    path: String,
+#[derive(Debug, Clone, Copy)]
+enum Value {
+    One,
+    Zero,
 }
 
-impl FileData {
-    fn values_to_str(vs: &Vec<Value>, invert: bool) -> String {
-        let mut s = String::with_capacity(vs.len());
-
-        for (i, val) in vs.iter().enumerate() {
-            s.push(if !invert { val.to_char() } else { val.to_char_invert() });
-            // because i is zero-indexed
-            if (i+1) % 8 == 0 {
-                s.push(' ');
-            }
+impl Value {
+    pub fn to_char(&self) -> char {
+        match self {
+            Value::One   => '1',
+            Value::Zero  => '0',
         }
-
-        s
     }
+}
 
-    fn parse_data<'a, I>(data: &mut Peekable<I>) -> Vec<Value> 
+impl fmt::Display for Value {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.to_char())
+    }
+}
+
+struct MessageRaw {
+    data: Vec<Value>,
+}
+
+impl MessageRaw {
+    pub fn parse_message<'a, I>(data: &mut Peekable<I>) -> Self
         where
-            I: Iterator<Item = &'a (i32, i32)>,
+        I: Iterator<Item = &'a (i32, i32)>,
         {
             use Value::*;
 
-            let mut result = Vec::new();
+            let mut result = Self {
+                data: Vec::new(),
+            };
             let d = data;
 
             {
@@ -59,22 +67,54 @@ impl FileData {
                     return result;
                 }
                 if low.1 > 7 {
-                    result.push(One);
+                    result.data.push(One);
                 } else {
-                    result.push(Zero);
+                    result.data.push(Zero);
                 }
             }
 
             result
         }
 
-    fn parse_many_datas(data: Vec<(i32, i32)>) -> Vec<Vec<Value>> {
+    pub fn reversed(&self) -> Self {
+        Self {
+            data: self.data.iter()
+                .rev()
+                .map(|x| *x)
+                .collect(),
+        }
+    }
+}
+
+impl fmt::Display for MessageRaw {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut s = String::with_capacity(self.data.len() + self.data.len()/8);
+
+        for (i, val) in self.data.iter().enumerate() {
+            s.push(val.to_char());
+            // because i is zero-indexed
+            if (i+1) % 8 == 0 {
+                s.push(' ');
+            }
+        }
+
+        write!(f, "{}", s)
+    }
+}
+
+struct FileData {
+    data: Vec<MessageRaw>,
+    path: String,
+}
+
+impl FileData {
+    fn parse_many_datas(data: Vec<(i32, i32)>) -> Vec<MessageRaw> {
         let mut data = data.iter().peekable();
 
         let mut result = vec![];
 
         while data.peek().is_some() { 
-            result.push(Self::parse_data(&mut data));
+            result.push(MessageRaw::parse_message(&mut data));
         }
 
         result
@@ -105,14 +145,13 @@ impl FileData {
         Some(ret)
     }
 
-    pub fn dump(&self, invert: bool, reverse: bool) {
+    pub fn dump(&self, reverse: bool) {
         println!("{}:", self.path);
         for d in &self.data {
             if reverse {
-                println!("{}:\t{}", d.len(), Self::values_to_str(
-                        &(d.into_iter().rev().map(|x| *x).collect()), invert));
+                println!("{}:\t{}", d.data.len(), d.reversed());
             } else {
-                println!("{}:\t{}", d.len(), Self::values_to_str(&d, invert));
+                println!("{}:\t{}", d.data.len(), d);
             }
         }
         println!();
@@ -138,51 +177,15 @@ fn group<T: std::cmp::PartialEq>(vec: Vec<T>) -> Vec<(T, i32)> {
     result
 }
 
-#[derive(Debug, Clone, Copy)]
-enum Value {
-    One,
-    Zero,
-}
-
-impl Value {
-    pub fn to_char(&self) -> char {
-        match self {
-            Value::One   => '1',
-            Value::Zero  => '0',
-        }
-    }
-
-    pub fn to_char_invert(&self) -> char {
-        match self {
-            Value::Zero  => '1',
-            Value::One   => '0',
-        }
-    }
-}
-
-impl fmt::Display for Value {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", match self {
-            Value::One   => "1",
-            Value::Zero  => "0",
-        })
-    }
-}
-
 fn main() -> Result<(), ()> {
     let mut args = env::args().peekable();
 
     let _program = args.next();
 
-    let mut invert: bool = false;
     let mut reverse: bool = false;
 
     while let Some(arg) = args.peek() {
         match &arg[..] {
-            "--invert" => {
-                invert = true;
-                args.next();
-            }
             "-r" | "--reverse" => {
                 reverse = true;
                 args.next();
@@ -206,7 +209,7 @@ fn main() -> Result<(), ()> {
     }
 
     for data in &datas {
-        data.dump(invert, reverse);
+        data.dump(reverse);
     }
     Ok(())
 }
