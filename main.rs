@@ -9,6 +9,7 @@ use std::{
     env,
     fmt,
     iter::Peekable,
+    process::ExitCode,
 };
 
 const RAW_DATA_MAX: f64 = 256.0;
@@ -177,7 +178,7 @@ fn group<T: std::cmp::PartialEq>(vec: Vec<T>) -> Vec<(T, i32)> {
     result
 }
 
-fn main() -> Result<(), ()> {
+fn entry() -> Result<(), ()> {
     let mut args = env::args().peekable();
 
     let _program = args.next();
@@ -212,4 +213,11 @@ fn main() -> Result<(), ()> {
         data.dump(reverse);
     }
     Ok(())
+}
+
+fn main() -> ExitCode {
+    match entry() {
+        Err(()) => ExitCode::FAILURE,
+        Ok(())  => ExitCode::SUCCESS,
+    }
 }
