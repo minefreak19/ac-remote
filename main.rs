@@ -22,7 +22,7 @@ enum Value {
 }
 
 impl Value {
-    pub fn to_char(&self) -> char {
+    fn to_char(&self) -> char {
         match self {
             Value::One   => '1',
             Value::Zero  => '0',
@@ -41,7 +41,7 @@ struct MessageRaw {
 }
 
 impl MessageRaw {
-    pub fn parse_message<'a, I>(data: &mut Peekable<I>) -> Self
+    fn parse_message<'a, I>(data: &mut Peekable<I>) -> Self
         where
         I: Iterator<Item = &'a (i32, i32)>,
         {
@@ -77,7 +77,7 @@ impl MessageRaw {
             result
         }
 
-    pub fn reversed(&self) -> Self {
+    fn reversed(&self) -> Self {
         Self {
             data: self.data.iter()
                 .rev()
@@ -121,7 +121,7 @@ impl FileData {
         result
     }
 
-    pub fn new(path: String) -> Option<Self> {
+    fn new(path: String) -> Option<Self> {
         let file = File::open(&path).map_err(|e| {
             eprintln!("ERROR: Could not open file `{path}`: {e}");
         }).ok()?;
@@ -146,7 +146,7 @@ impl FileData {
         Some(ret)
     }
 
-    pub fn dump(&self, reverse: bool) {
+    fn dump(&self, reverse: bool) {
         println!("{}:", self.path);
         for d in &self.data {
             if reverse {
