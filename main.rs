@@ -108,7 +108,7 @@ struct FileData {
 }
 
 impl FileData {
-    fn parse_many_datas(data: Vec<(i32, i32)>) -> Vec<MessageRaw> {
+    fn parse_file(data: Vec<(i32, i32)>) -> Vec<MessageRaw> {
         let mut data = data.iter().peekable();
 
         let mut result = vec![];
@@ -138,7 +138,7 @@ impl FileData {
         let data = group(data);
 
         let ret = Self {
-            data: Self::parse_many_datas(data),
+            data: Self::parse_file(data),
             path
         };
 
