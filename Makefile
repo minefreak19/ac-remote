@@ -1,5 +1,5 @@
 main: main.rs
-	rustc main.rs
+	rustc -O main.rs
 
 .PHONY: all
 all: parsed.txt parsed_rev.txt
