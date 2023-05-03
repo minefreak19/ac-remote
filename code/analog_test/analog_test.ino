@@ -21,7 +21,7 @@ void setup() {
 }
 
 bool saving = false;
-int value = 0;
+u8 value = 0;
 int zeroes = 0;
 int swValue = 0;
 u16 i = 0;
@@ -49,7 +49,7 @@ inline void clear_readings() {
 }
 
 void loop() {
-  value = analogRead(INPUT_PIN);
+  value = (u8)((analogRead(INPUT_PIN)) >> 2);
 
   bool old_saving = saving;
 
@@ -69,7 +69,7 @@ void loop() {
       clear_readings();
     }
 
-    readings[readings_count++] = (u8) (value >> 2);
+    readings[readings_count++] = value;
 
     if (IS_ZERO(value)) zeroes++;
 
