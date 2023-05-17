@@ -1,13 +1,7 @@
 use std::{
-    fs::{
-        File,
-    },
-    io::{
-        prelude::*,
-        BufReader,
-    },
-    env,
-    fmt,
+    env, fmt,
+    fs::File,
+    io::{prelude::*, BufReader},
     iter::Peekable,
     process::ExitCode,
 };
@@ -24,8 +18,8 @@ enum Value {
 impl Value {
     fn to_char(&self) -> char {
         match self {
-            Value::One   => '1',
-            Value::Zero  => '0',
+            Value::One => '1',
+            Value::Zero => '0',
         }
     }
 }
@@ -42,59 +36,54 @@ struct MessageRaw {
 
 impl MessageRaw {
     fn parse_message<'a, I>(data: &mut Peekable<I>) -> Self
-        where
+    where
         I: Iterator<Item = &'a (i32, i32)>,
+    {
+        use Value::*;
+
+        let mut result = Self { data: Vec::new() };
+        let d = data;
+
         {
-            use Value::*;
-
-            let mut result = Self {
-                data: Vec::new(),
-            };
-            let d = data;
-
-            {
-                let b1 = d.next().unwrap();
-                assert!(b1.0 == 1 && b1.1 >= 27 && b1.1 <= 30);
-                let b0 = d.next().unwrap();
-                assert!(b0.0 == 0 && b0.1 >= 78 && b0.1 <= 80);
-            }
-
-            while d.peek().is_some() {
-                let high = d.next().unwrap();
-                assert!(high.0 == 1);
-                let low = d.next().unwrap();
-                assert!(low.0 == 0);
-                if low.1 > 200 {
-                    return result;
-                }
-                if low.1 > 7 {
-                    result.data.push(One);
-                } else {
-                    result.data.push(Zero);
-                }
-            }
-
-            result
+            let b1 = d.next().unwrap();
+            assert!(b1.0 == 1 && b1.1 >= 27 && b1.1 <= 30);
+            let b0 = d.next().unwrap();
+            assert!(b0.0 == 0 && b0.1 >= 78 && b0.1 <= 80);
         }
+
+        while d.peek().is_some() {
+            let high = d.next().unwrap();
+            assert!(high.0 == 1);
+            let low = d.next().unwrap();
+            assert!(low.0 == 0);
+            if low.1 > 200 {
+                return result;
+            }
+            if low.1 > 7 {
+                result.data.push(One);
+            } else {
+                result.data.push(Zero);
+            }
+        }
+
+        result
+    }
 
     fn reversed(&self) -> Self {
         Self {
-            data: self.data.iter()
-                .rev()
-                .map(|x| *x)
-                .collect(),
+            data: self.data.iter().rev().map(|x| *x).collect(),
         }
     }
 }
 
 impl fmt::Display for MessageRaw {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut s = String::with_capacity(self.data.len() + self.data.len()/8);
+        let mut s = String::with_capacity(self.data.len() + self.data.len() / 8);
 
         for (i, val) in self.data.iter().enumerate() {
             s.push(val.to_char());
             // because i is zero-indexed
-            if (i+1) % 8 == 0 {
+            if (i + 1) % 8 == 0 {
                 s.push(' ');
             }
         }
@@ -114,7 +103,7 @@ impl FileData {
 
         let mut result = vec![];
 
-        while data.peek().is_some() { 
+        while data.peek().is_some() {
             result.push(MessageRaw::parse_message(&mut data));
         }
 
@@ -122,12 +111,15 @@ impl FileData {
     }
 
     fn new(path: String) -> Option<Self> {
-        let file = File::open(&path).map_err(|e| {
-            eprintln!("ERROR: Could not open file `{path}`: {e}");
-        }).ok()?;
+        let file = File::open(&path)
+            .map_err(|e| {
+                eprintln!("ERROR: Could not open file `{path}`: {e}");
+            })
+            .ok()?;
         let buf = BufReader::new(file);
 
-        let data: Vec<_> = buf.lines()
+        let data: Vec<_> = buf
+            .lines()
             .map(|l| l.expect("Could not parse line"))
             .map(|l| l.parse::<i32>())
             .filter(|l| l.is_ok())
@@ -140,7 +132,7 @@ impl FileData {
 
         let ret = Self {
             data: Self::parse_file(data),
-            path
+            path,
         };
 
         Some(ret)
@@ -194,7 +186,7 @@ fn entry() -> Result<(), ()> {
             _ => {
                 break;
             }
-        }  
+        }
     }
 
     if !args.peek().is_some() {
@@ -218,6 +210,6 @@ fn entry() -> Result<(), ()> {
 fn main() -> ExitCode {
     match entry() {
         Err(()) => ExitCode::FAILURE,
-        Ok(())  => ExitCode::SUCCESS,
+        Ok(()) => ExitCode::SUCCESS,
     }
 }
